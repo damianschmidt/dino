@@ -7,7 +7,8 @@ class Bird:
     def __init__(self, x):
         self.type_of_bird = self.get_type_of_bird()
         self.x = x
-        self.y = self.set_y()
+        self.y = 0
+        self.y_type = self.set_y_type()
         self.velocity = 10
         self.next_added = False
 
@@ -25,13 +26,13 @@ class Bird:
         else:
             return 'low'
 
-    def set_y(self):
+    def set_y_type(self):
         if self.type_of_bird == 'high':
-            return 60
+            return 45
         elif self.type_of_bird == 'mid':
-            return 28
+            return 20
         else:
-            return 5
+            return -10
 
     def load_img(self):
         imgs = [pygame.image.load(f'src/img/bird_{i}.png') for i in range(1, 3)]
@@ -41,8 +42,16 @@ class Bird:
     def move(self):
         self.x -= self.velocity
 
-    def collide(self):
-        pass
+    def collide(self, dino):
+        dino_mask = pygame.mask.from_surface(dino.img)
+        bird_mask = pygame.mask.from_surface(self.img)
+        bird_offset = (self.x - dino.x, self.y - round(dino.y))
+        print(dino_mask, bird_mask, bird_offset)
+        bird_collision = dino_mask.overlap(bird_mask, bird_offset)
+
+        if bird_collision:
+            return True
+        return False
 
     def draw(self, screen, ground):
         if self.flap_count < self.animation_time:
@@ -54,5 +63,6 @@ class Bird:
             self.flap_count = 0
 
         self.flap_count += 1
-        screen.blit(self.img, (self.x, screen.get_height() - ground.height - self.img.get_height() - self.y))
+        self.y = screen.get_height() - ground.height - self.img.get_height() - self.y_type
+        screen.blit(self.img, (self.x, self.y))
 

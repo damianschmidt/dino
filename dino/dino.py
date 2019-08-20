@@ -3,7 +3,9 @@ import pygame
 
 class Dino:
     def __init__(self):
-        self.y_position = 0
+        self.y = 0
+        self.x = 100
+        self.y_change = 0
         self.y_velocity = 0
         self.gravity = 1
 
@@ -26,17 +28,20 @@ class Dino:
                        for img in img_set]
         return scaled_imgs
 
-    def big_jump(self):
-        pass
+    def move(self):
+        self.y_change += self.y_velocity
+        if self.y_change > 0:
+            self.y_velocity -= self.gravity
+        else:
+            self.y_velocity = 0
+            self.y_change = 0
 
-    def small_jump(self):
-        pass
-
-    def duck(self):
-        pass
-
-    def collide(self):
-        pass
+        if not self.duck and self.y_change != 0:
+            self.run = False
+            self.jump = True
+        elif not self.duck:
+            self.jump = False
+            self.run = True
 
     def draw(self, screen, ground):
         if self.run:
@@ -55,4 +60,5 @@ class Dino:
             self.img_count = 0
 
         self.img_count += 1
-        screen.blit(self.img, (100, screen.get_height() - ground.height - self.img.get_height() + 15))
+        self.y = screen.get_height() - ground.height - self.img.get_height() + 15 - self.y_change
+        screen.blit(self.img, (self.x, self.y))

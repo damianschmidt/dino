@@ -20,12 +20,13 @@ class Game:
         self.score = 0
         self.run = False
 
-    def move(self, ground, obstacles):
+    def move(self, dinos, ground, obstacles):
+        [dino.move() for dino in dinos]
         for obstacle in obstacles:
             if obstacle.x < self.screen_width and not obstacle.next_added:
                 obstacle.next_added = True
                 random = randint(0, 3)
-                obstacles.append(Cactus(self.screen_width + randint(500, 1000))) if random != 3 \
+                obstacles.append(Cactus(self.screen_width + randint(500, 1000))) if random == 3 \
                     else obstacles.append(Bird(self.screen_width + randint(500, 1000)))
         [obstacle.move() for obstacle in obstacles]
         [obstacles.remove(obstacle) for obstacle in obstacles if obstacle.x + obstacle.img.get_width() < 0]
@@ -49,18 +50,56 @@ class Game:
         clock.tick(30)
         pygame.display.update()
 
+    def collide(self, dinos, obstacles):
+        for dino in dinos:
+            for obstacle in obstacles:
+                if obstacle.collide(dino):
+                    self.run = False
+
+    def restart(self):
+        self.score = 0
+        self.run = True
+        return [Dino()], Ground(self.screen_width), [Cactus(self.screen_width)]
+
     def game_loop(self):
         dinos = [Dino()]
         ground = Ground(self.screen_width)
         obstacles = [Cactus(self.screen_width)]
         self.run = True
+        space_down_timer = 0
 
-        while self.run:
+        while True:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     quit()
+                elif event.type == pygame.KEYDOWN and event.key == pygame.K_r:
+                    dinos, ground, obstacles = self.restart()
 
-            self.move(ground, obstacles)
-            self.draw_screen(dinos, ground, obstacles)
-            self.score += 0.3
+            while self.run:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        pygame.quit()
+                        quit()
+                    elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                        if dinos[0].y_change == 0:
+                            dinos[0].gravity = 2
+                            dinos[0].y_velocity = 22
+                            space_down_timer = 0
+                    elif event.type == pygame.KEYDOWN and event.key == pygame.K_DOWN:
+                        if dinos[0].y_change != 0:
+                            dinos[0].gravity = 5
+                        dinos[0].duck = True
+                        dinos[0].run = False
+                    elif event.type == pygame.KEYUP and event.key == pygame.K_SPACE:
+                        if space_down_timer < 15:
+                            dinos[0].gravity = 3
+                    elif event.type == pygame.KEYUP and event.key == pygame.K_DOWN:
+                        dinos[0].duck = False
+                        dinos[0].run = True
+
+                space_down_timer += 1
+                self.move(dinos, ground, obstacles)
+                self.draw_screen(dinos, ground, obstacles)
+                self.collide(dinos, obstacles)
+                self.score += 0.3

@@ -4,6 +4,7 @@ from random import randint
 
 class Cactus:
     def __init__(self, x):
+        self.y = 0
         self.x = x
         self.type_of_obstacle = self.get_type_of_obstacle()
         self.img = self.load_img()
@@ -27,8 +28,17 @@ class Cactus:
     def move(self):
         self.x -= self.velocity
 
-    def collide(self):
-        pass
+    def collide(self, dino):
+        dino_mask = pygame.mask.from_surface(dino.img)
+        cactus_mask = pygame.mask.from_surface(self.img)
+        cactus_offset = (self.x - dino.x, self.y - round(dino.y))
+
+        cactus_collision = dino_mask.overlap(cactus_mask, cactus_offset)
+
+        if cactus_collision:
+            return True
+        return False
 
     def draw(self, screen, ground):
-        screen.blit(self.img, (self.x, screen.get_height() - ground.height - self.img.get_height() + 15))
+        self.y = screen.get_height() - ground.height - self.img.get_height() + 15
+        screen.blit(self.img, (self.x, self.y))
