@@ -114,3 +114,9 @@ class Game:
                 self.collide(dinos, obstacles)
                 self.score += 0.2
 
+    def eval_genomes(self, genomes, config):
+        pass
+
+    def run_neat(self, config_file):
+        pass
+
