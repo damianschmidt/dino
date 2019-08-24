@@ -133,6 +133,49 @@ class Game:
             genomes_list.append(genome)
 
         # Build game
+        ground = Ground(self.screen_width)
+        obstacles = [Cactus(self.screen_width)]
+        self.run = True
+        space_down_timer = 0
+
+        while self.run and len(dinos) > 0:
+            clock.tick(30)
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    quit()
+
+            for i, dino in enumerate(dinos):
+                genomes_list[i].fitness += 0.1
+                dino.move()
+
+                # give dino distance to next obstacle, height of obstacle, speed, dino y position
+                # and gap between obstacles to make decision what to do
+                # output = neat[i].activate(args)
+                #
+                # if output[0] > 0.5:
+                #     jump
+                # if output[1] > 0.5:
+                #     duck
+                # if output[2] > 0.5:
+                #     release
+
+            ground.move()
+            for obstacle in obstacles:
+                if obstacle.x < self.screen_width and not obstacle.next_added:
+                    obstacle.next_added = True
+                    random = randint(0, 3)
+                    obstacles.append(Cactus(self.screen_width + randint(400, 1000))) if random != 3 \
+                        else obstacles.append(Bird(self.screen_width + randint(400, 1000)))
+            [obstacle.move() for obstacle in obstacles]
+            [obstacles.remove(obstacle) for obstacle in obstacles if obstacle.x + obstacle.img.get_width() < 0]
+
+            if int(self.score % 15) == 0:
+                self.increase_speed(ground, obstacles, 0.1)
+            self.draw_screen(dinos, ground, obstacles)
+            # self.collide(dinos, obstacles)  # TODO: Change to get reward in fitness
+            self.score += 0.2
 
     def run_neat(self, config_file):
         # Load configuration
