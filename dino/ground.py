@@ -7,7 +7,7 @@ class Ground:
         self.width = width
         self.height = 100
         self.rocks = self.create_rocks()
-        self.velocity = 10
+        self.velocity = 8.0
 
     def create_rocks(self):
         return [Rock(self.height, self.width + i * 100) for i in range(8)]

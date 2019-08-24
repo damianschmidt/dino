@@ -9,7 +9,7 @@ class Bird:
         self.x = x
         self.y = 0
         self.y_type = self.set_y_type()
-        self.velocity = 10
+        self.velocity = 8.0
         self.next_added = False
 
         self.imgs = self.load_img()
@@ -45,8 +45,7 @@ class Bird:
     def collide(self, dino):
         dino_mask = pygame.mask.from_surface(dino.img)
         bird_mask = pygame.mask.from_surface(self.img)
-        bird_offset = (self.x - dino.x, self.y - round(dino.y))
-        print(dino_mask, bird_mask, bird_offset)
+        bird_offset = (int(round(self.x)) - dino.x, int(round(self.y)) - round(dino.y))
         bird_collision = dino_mask.overlap(bird_mask, bird_offset)
 
         if bird_collision:

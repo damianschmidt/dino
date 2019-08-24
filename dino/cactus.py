@@ -8,7 +8,7 @@ class Cactus:
         self.x = x
         self.type_of_obstacle = self.get_type_of_obstacle()
         self.img = self.load_img()
-        self.velocity = 10
+        self.velocity = 8.0
         self.next_added = False
 
     def get_type_of_obstacle(self):
@@ -31,7 +31,7 @@ class Cactus:
     def collide(self, dino):
         dino_mask = pygame.mask.from_surface(dino.img)
         cactus_mask = pygame.mask.from_surface(self.img)
-        cactus_offset = (self.x - dino.x, self.y - round(dino.y))
+        cactus_offset = (int(round(self.x)) - dino.x, int(round(self.y)) - round(dino.y))
 
         cactus_collision = dino_mask.overlap(cactus_mask, cactus_offset)
 
