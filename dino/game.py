@@ -1,7 +1,9 @@
+import neat
 import pygame
 from random import randint
 from math import floor
 
+import visualize
 from dino.dino import Dino
 from dino.ground import Ground
 from dino.cactus import Cactus
@@ -20,6 +22,7 @@ class Game:
         self.score = 0
         self.speed = 8.0
         self.run = False
+        self.generation = 0
 
     def move(self, dinos, ground, obstacles):
         [dino.move() for dino in dinos]
@@ -115,8 +118,42 @@ class Game:
                 self.score += 0.2
 
     def eval_genomes(self, genomes, config):
-        pass
+        self.generation += 1
+
+        nets = []
+        dinos = []
+        genomes_list = []
+
+        for genome_id, genome in genomes:
+            genome.fitness = 0
+            net = neat.nn.FeedForwardNetwork.create(genome, config)
+
+            nets.append(net)
+            dinos.append(Dino())
+            genomes_list.append(genome)
+
+        # Build game
 
     def run_neat(self, config_file):
-        pass
+        # Load configuration
+        config = neat.Config(neat.DefaultGenome, neat.DefaultReproduction, neat.DefaultSpeciesSet,
+                             neat.DefaultStagnation, config_file)
 
+        # Create the population which is the top-level object for a NEAT run
+        p = neat.Population(config)
+
+        # Add stdout reporter to show progress in the terminal
+        p.add_reporter(neat.StdOutReporter(True))
+        stats = neat.StatisticsReporter()
+        p.add_reporter(stats)
+
+        # Run for 50 generations
+        winner = p.run(self.eval_genomes, 50)
+
+        # Show final stats
+        print(f'\nBest genome:\n{winner}')
+        node_names = {-1: 'DISTANCE_TO_OBSTACLE', -2: 'HEIGHT_OF_OBSTACLE', -3: 'SPEED', -4: 'DINO_Y',
+                      -5: 'GAP', 0: 'JUMP', 1: 'DUCK', 2: 'RELEASE'}
+        visualize.draw_net(config, winner, True, node_names=node_names)
+        visualize.plot_stats(stats, ylog=False, view=True)
+        visualize.plot_species(stats, view=True)
