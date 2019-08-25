@@ -152,14 +152,19 @@ class Game:
                 width_of_obstacle = obstacles[obstacle_index].img.get_width()
                 speed = self.speed
                 dino_y = dino.y_change
+                if len(obstacles) > obstacle_index + 1:
+                    gap_between_obstacles = obstacles[obstacle_index + 1].x - obstacles[obstacle_index].x
+                else:
+                    gap_between_obstacles = self.screen_width
 
                 output = nets[i].activate(
-                    (distance_to_next_obstacle, height_of_obstacle, width_of_obstacle, speed, dino_y))
+                    (distance_to_next_obstacle, height_of_obstacle, width_of_obstacle, speed, dino_y,
+                     gap_between_obstacles))
 
                 if i == 0:
                     self.draw_screen(dinos, ground, obstacles)
                     self.draw_what_dino_know(distance_to_next_obstacle, height_of_obstacle, width_of_obstacle, speed,
-                                             dino_y)
+                                             dino_y, gap_between_obstacles)
                     clock.tick(30)
                     pygame.display.update()
 
@@ -218,19 +223,19 @@ class Game:
         stats = neat.StatisticsReporter()
         p.add_reporter(stats)
 
-        # Run for 50 generations
-        winner = p.run(self.eval_genomes, 50)
+        # Run for 20 generations
+        winner = p.run(self.eval_genomes, 20)
 
         # Show final stats
         print(f'\nBest genome:\n{winner}')
         node_names = {-1: 'DISTANCE_TO_OBSTACLE', -2: 'HEIGHT_OF_OBSTACLE', -3: 'WIDTH_OF_OBSTACLE', -4: 'SPEED',
-                      -5: 'DINO_Y', 0: 'JUMP', 1: 'DUCK'}
+                      -5: 'DINO_Y', -6: 'GAP', 0: 'JUMP', 1: 'DUCK'}
         visualize.draw_net(config, winner, True, node_names=node_names)
         visualize.plot_stats(stats, ylog=False, view=True)
         visualize.plot_species(stats, view=True)
 
     def draw_what_dino_know(self, distance_to_next_obstacle, height_of_obstacle, width_of_obstacle, speed,
-                            dino_y):
+                            dino_y, gap_between_obstacles):
         pygame.font.init()
         font = pygame.font.SysFont('Comic-Sans', 20)
         distance_to_next_obstacle_surface = font.render(f'Distance: {floor(distance_to_next_obstacle)}', True,
@@ -239,9 +244,11 @@ class Game:
         width_of_obstacle_surface = font.render(f'Width: {floor(width_of_obstacle)}', True, (255, 0, 0))
         speed_surface = font.render(f'Speed: {floor(speed)}', True, (255, 0, 0))
         dino_y_surface = font.render(f'Dino Y: {floor(dino_y)}', True, (255, 0, 0))
+        gap_between_obstacles_surface = font.render(f'Gap: {floor(gap_between_obstacles)}', True, (255, 0, 0))
 
         self.screen.blit(distance_to_next_obstacle_surface, (500, 10))
         self.screen.blit(height_of_obstacle_surface, (500, 30))
         self.screen.blit(width_of_obstacle_surface, (500, 50))
         self.screen.blit(speed_surface, (500, 70))
         self.screen.blit(dino_y_surface, (500, 90))
+        self.screen.blit(gap_between_obstacles_surface, (500, 110))
