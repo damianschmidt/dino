@@ -36,11 +36,15 @@ class Game:
         [obstacles.remove(obstacle) for obstacle in obstacles if obstacle.x + obstacle.img.get_width() < 0]
         ground.move()
 
-    def draw_score(self):
+    def draw_score(self, dinos):
         pygame.font.init()
         font = pygame.font.SysFont('Comic-Sans', 20)
         score_surface = font.render(f'Score: {floor(self.score)}', True, (0, 0, 0))
+        alive_surface = font.render(f'Alive: {floor(len(dinos))}', True, (0, 0, 0))
+        generation_surface = font.render(f'Generation: {floor(self.generation)}', True, (0, 0, 0))
         self.screen.blit(score_surface, (10, 10))
+        self.screen.blit(alive_surface, (10, 30))
+        self.screen.blit(generation_surface, (10, 50))
 
     def draw_screen(self, dinos, ground, obstacles):
         self.screen.fill((255, 255, 255))
@@ -49,7 +53,7 @@ class Game:
         [obstacle.draw(self.screen, ground) for obstacle in obstacles]
         [dino.draw(self.screen, ground) for dino in dinos]
 
-        self.draw_score()
+        self.draw_score(dinos)
 
         clock.tick(30)
         pygame.display.update()
@@ -146,20 +150,45 @@ class Game:
                     pygame.quit()
                     quit()
 
+            # On which pipe NEAT should take care of
+            obstacle_index = 0
+            if len(obstacles) > 1 and dinos[0].x > obstacles[0].x + obstacles[0].img.get_width():
+                obstacle_index = 1
+
             for i, dino in enumerate(dinos):
-                genomes_list[i].fitness += 0.1
+                genomes_list[i].fitness = self.score
                 dino.move()
 
                 # give dino distance to next obstacle, height of obstacle, speed, dino y position
                 # and gap between obstacles to make decision what to do
-                # output = neat[i].activate(args)
-                #
-                # if output[0] > 0.5:
-                #     jump
-                # if output[1] > 0.5:
-                #     duck
-                # if output[2] > 0.5:
-                #     release
+                distance_to_next_obstacle = obstacles[obstacle_index].x - dino.x
+                height_of_obstacle = obstacles[obstacle_index].img.get_height()
+                speed = self.speed
+                dino_y = dino.y
+
+                if len(obstacles) > obstacle_index + 1:
+                    gap_between_obstacles = obstacles[obstacle_index + 1].x - obstacles[obstacle_index].x
+                else:
+                    gap_between_obstacles = self.screen_width
+
+                output = nets[i].activate(distance_to_next_obstacle, height_of_obstacle, speed, dino_y,
+                                          gap_between_obstacles)
+
+                if output[0] > 0.5:
+                    if dinos[0].y_change == 0:
+                        dinos[0].gravity = 2
+                        dinos[0].y_velocity = 22
+                        space_down_timer = 0
+                if output[1] > 0.5:
+                    if dino.y_change != 0:
+                        dino.gravity = 5
+                    dino.duck = True
+                    dino.run = False
+                if output[2] > 0.5:
+                    if space_down_timer < 15:
+                        dino.gravity = 3
+                    dino.duck = False
+                    dino.run = True
 
             ground.move()
             for obstacle in obstacles:
@@ -174,7 +203,18 @@ class Game:
             if int(self.score % 15) == 0:
                 self.increase_speed(ground, obstacles, 0.1)
             self.draw_screen(dinos, ground, obstacles)
-            # self.collide(dinos, obstacles)  # TODO: Change to get reward in fitness
+
+            to_remove = []
+            for i, dino in enumerate(dinos):
+                for obstacle in obstacles:
+                    if obstacle.collide(dino):
+                        to_remove.append((dino, nets[i], genomes_list[i]))
+
+            for item in to_remove:
+                dinos.remove(item[0])
+                nets.remove(item[1])
+                genomes_list.remove(item[2])
+
             self.score += 0.2
 
     def run_neat(self, config_file):
