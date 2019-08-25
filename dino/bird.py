@@ -17,6 +17,8 @@ class Bird:
         self.flap_count = 0
         self.animation_time = 5
 
+        self.passed = False
+
     def get_type_of_bird(self):
         random_type = randint(0, 2)
         if random_type == 0:

@@ -30,8 +30,8 @@ class Game:
             if obstacle.x < self.screen_width and not obstacle.next_added:
                 obstacle.next_added = True
                 random = randint(0, 3)
-                obstacles.append(Cactus(self.screen_width + randint(400, 1000))) if random != 3 \
-                    else obstacles.append(Bird(self.screen_width + randint(400, 1000)))
+                obstacles.append(Cactus(self.screen_width + randint(300, 1000))) if random != 3 \
+                    else obstacles.append(Bird(self.screen_width + randint(300, 1000)))
         [obstacle.move() for obstacle in obstacles]
         [obstacles.remove(obstacle) for obstacle in obstacles if obstacle.x + obstacle.img.get_width() < 0]
         ground.move()
@@ -54,9 +54,6 @@ class Game:
         [dino.draw(self.screen, ground) for dino in dinos]
 
         self.draw_score(dinos)
-
-        clock.tick(30)
-        pygame.display.update()
 
     def collide(self, dinos, obstacles):
         for dino in dinos:
@@ -81,7 +78,6 @@ class Game:
         ground = Ground(self.screen_width)
         obstacles = [Cactus(self.screen_width)]
         self.run = True
-        space_down_timer = 0
 
         while True:
             for event in pygame.event.get():
@@ -97,29 +93,22 @@ class Game:
                         pygame.quit()
                         quit()
                     elif event.type == pygame.KEYDOWN and (event.key == pygame.K_SPACE or event.key == pygame.K_UP):
-                        if dinos[0].y_change == 0:
-                            dinos[0].gravity = 2
-                            dinos[0].y_velocity = 22
-                            space_down_timer = 0
+                        dinos[0].jump()
                     elif event.type == pygame.KEYDOWN and event.key == pygame.K_DOWN:
-                        if dinos[0].y_change != 0:
-                            dinos[0].gravity = 5
-                        dinos[0].duck = True
-                        dinos[0].run = False
-                    elif event.type == pygame.KEYUP and (event.key == pygame.K_SPACE or event.key == pygame.K_UP):
-                        if space_down_timer < 15:
-                            dinos[0].gravity = 3
-                    elif event.type == pygame.KEYUP and event.key == pygame.K_DOWN:
-                        dinos[0].duck = False
-                        dinos[0].run = True
+                        dinos[0].duck()
+                    elif event.type == pygame.KEYUP and (
+                            event.key == pygame.K_SPACE or event.key == pygame.K_UP or event.key == pygame.K_DOWN):
+                        dinos[0].run()
 
-                space_down_timer += 1
                 self.move(dinos, ground, obstacles)
                 if int(self.score % 15) == 0:
                     self.increase_speed(ground, obstacles, 0.1)
                 self.draw_screen(dinos, ground, obstacles)
                 self.collide(dinos, obstacles)
                 self.score += 0.2
+
+                clock.tick(30)
+                pygame.display.update()
 
     def eval_genomes(self, genomes, config):
         self.generation += 1
@@ -139,12 +128,10 @@ class Game:
         # Build game
         ground = Ground(self.screen_width)
         obstacles = [Cactus(self.screen_width)]
-        self.run = True
-        space_down_timer = 0
+        self.score = 0
+        self.speed = 8.0
 
-        while self.run and len(dinos) > 0:
-            clock.tick(30)
-
+        while len(dinos) > 0:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -156,53 +143,50 @@ class Game:
                 obstacle_index = 1
 
             for i, dino in enumerate(dinos):
-                genomes_list[i].fitness = self.score
+                genomes_list[i].fitness += 0.1
                 dino.move()
 
-                # give dino distance to next obstacle, height of obstacle, speed, dino y position
-                # and gap between obstacles to make decision what to do
-                distance_to_next_obstacle = obstacles[obstacle_index].x - dino.x
+                distance_to_next_obstacle = obstacles[obstacle_index].x - (dino.x + dino.img.get_width())
                 height_of_obstacle = obstacles[obstacle_index].img.get_height()
+                width_of_obstacle = obstacles[obstacle_index].img.get_width()
                 speed = self.speed
-                dino_y = dino.y
+                dino_y = dino.y_change
 
-                if len(obstacles) > obstacle_index + 1:
-                    gap_between_obstacles = obstacles[obstacle_index + 1].x - obstacles[obstacle_index].x
+                output = nets[i].activate(
+                    (distance_to_next_obstacle, height_of_obstacle, width_of_obstacle, speed, dino_y))
+
+                if i == 0:
+                    self.draw_screen(dinos, ground, obstacles)
+                    self.draw_what_dino_know(distance_to_next_obstacle, height_of_obstacle, width_of_obstacle, speed,
+                                             dino_y, output)
+                    clock.tick(30)
+                    pygame.display.update()
+
+                decision = [output[0], 0] if output[0] > output[1] else [output[1], 1]
+                if decision[0] > 0.5:
+                    dino.jump() if decision[1] == 0 else dino.duck()
                 else:
-                    gap_between_obstacles = self.screen_width
-
-                output = nets[i].activate(distance_to_next_obstacle, height_of_obstacle, speed, dino_y,
-                                          gap_between_obstacles)
-
-                if output[0] > 0.5:
-                    if dinos[0].y_change == 0:
-                        dinos[0].gravity = 2
-                        dinos[0].y_velocity = 22
-                        space_down_timer = 0
-                if output[1] > 0.5:
-                    if dino.y_change != 0:
-                        dino.gravity = 5
-                    dino.duck = True
-                    dino.run = False
-                if output[2] > 0.5:
-                    if space_down_timer < 15:
-                        dino.gravity = 3
-                    dino.duck = False
-                    dino.run = True
+                    dino.run()
 
             ground.move()
             for obstacle in obstacles:
                 if obstacle.x < self.screen_width and not obstacle.next_added:
                     obstacle.next_added = True
                     random = randint(0, 3)
-                    obstacles.append(Cactus(self.screen_width + randint(400, 1000))) if random != 3 \
-                        else obstacles.append(Bird(self.screen_width + randint(400, 1000)))
+                    obstacles.append(Cactus(self.screen_width + randint(300, 1000))) if random != 3 \
+                        else obstacles.append(Bird(self.screen_width + randint(300, 1000)))
             [obstacle.move() for obstacle in obstacles]
             [obstacles.remove(obstacle) for obstacle in obstacles if obstacle.x + obstacle.img.get_width() < 0]
 
+            for obstacle in obstacles:
+                for i, dino in enumerate(dinos):
+
+                    if not obstacle.passed and obstacle.x < dino.x:
+                        genomes_list[i].fitness += 5
+                        obstacle.passed = True
+
             if int(self.score % 15) == 0:
                 self.increase_speed(ground, obstacles, 0.1)
-            self.draw_screen(dinos, ground, obstacles)
 
             to_remove = []
             for i, dino in enumerate(dinos):
@@ -235,8 +219,27 @@ class Game:
 
         # Show final stats
         print(f'\nBest genome:\n{winner}')
-        node_names = {-1: 'DISTANCE_TO_OBSTACLE', -2: 'HEIGHT_OF_OBSTACLE', -3: 'SPEED', -4: 'DINO_Y',
-                      -5: 'GAP', 0: 'JUMP', 1: 'DUCK', 2: 'RELEASE'}
+        node_names = {-1: 'DISTANCE_TO_OBSTACLE', -2: 'HEIGHT_OF_OBSTACLE', -3: 'WIDTH_OF_OBSTACLE', -4: 'SPEED',
+                      -5: 'DINO_Y', 0: 'JUMP', 1: 'DUCK'}
         visualize.draw_net(config, winner, True, node_names=node_names)
         visualize.plot_stats(stats, ylog=False, view=True)
         visualize.plot_species(stats, view=True)
+
+    def draw_what_dino_know(self, distance_to_next_obstacle, height_of_obstacle, width_of_obstacle, speed,
+                            dino_y, the_heightest_output):
+        pygame.font.init()
+        font = pygame.font.SysFont('Comic-Sans', 20)
+        distance_to_next_obstacle_surface = font.render(f'Distance: {floor(distance_to_next_obstacle)}', True,
+                                                        (255, 0, 0))
+        height_of_obstacle_surface = font.render(f'Height: {floor(height_of_obstacle)}', True, (255, 0, 0))
+        width_of_obstacle_surface = font.render(f'Width: {floor(width_of_obstacle)}', True, (255, 0, 0))
+        speed_surface = font.render(f'Speed: {floor(speed)}', True, (255, 0, 0))
+        dino_y_surface = font.render(f'Dino Y: {floor(dino_y)}', True, (255, 0, 0))
+        output_surface = font.render(f'Output: {the_heightest_output[0]}', True,
+                                     (255, 0, 0))
+        self.screen.blit(distance_to_next_obstacle_surface, (500, 30))
+        self.screen.blit(height_of_obstacle_surface, (500, 50))
+        self.screen.blit(width_of_obstacle_surface, (500, 70))
+        self.screen.blit(speed_surface, (500, 90))
+        self.screen.blit(dino_y_surface, (500, 110))
+        self.screen.blit(output_surface, (500, 130))

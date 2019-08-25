@@ -10,5 +10,5 @@ if __name__ == '__main__':
 
     # NEAT start
     local_dir = os.path.dirname(__file__)
-    config_path = os.path.join(local_dir, 'config=feedforward')
+    config_path = os.path.join(local_dir, 'config-feedforward')
     app.run_neat(config_path)

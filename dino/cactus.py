@@ -11,6 +11,8 @@ class Cactus:
         self.velocity = 8.0
         self.next_added = False
 
+        self.passed = False
+
     def get_type_of_obstacle(self):
         random_type = randint(0, 2)
         if random_type == 0:

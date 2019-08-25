@@ -14,9 +14,9 @@ class Dino:
         self.img_count = 0
         self.animation_time = 3
 
-        self.run = True
-        self.duck = False
-        self.jump = False
+        self.is_run = True
+        self.is_duck = False
+        self.is_jump = False
 
     def load_images(self):
         imgs = [[pygame.image.load(f'src/img/dino_run_{str(x)}.png') for x in range(1, 3)],
@@ -28,6 +28,23 @@ class Dino:
                        for img in img_set]
         return scaled_imgs
 
+    def jump(self):
+        if self.y_change == 0:
+            self.gravity = 2
+            self.y_velocity = 22
+
+    def duck(self):
+        if self.y_change != 0:
+            self.gravity = 6
+        self.is_duck = True
+        self.is_run = False
+
+    def run(self):
+        if self.y_change != 0:
+            self.gravity = 4
+        self.is_duck = False
+        self.is_run = True
+
     def move(self):
         self.y_change += self.y_velocity
         if self.y_change > 0:
@@ -36,17 +53,17 @@ class Dino:
             self.y_velocity = 0
             self.y_change = 0
 
-        if not self.duck and self.y_change != 0:
-            self.run = False
-            self.jump = True
-        elif not self.duck:
-            self.jump = False
-            self.run = True
+        if not self.is_duck and self.y_change != 0:
+            self.is_run = False
+            self.is_jump = True
+        elif not self.is_duck:
+            self.is_jump = False
+            self.is_run = True
 
     def draw(self, screen, ground):
-        if self.run:
+        if self.is_run:
             i, j = 0, 1
-        elif self.duck:
+        elif self.is_duck:
             i, j = 2, 3
         else:
             i, j = 4, 4
