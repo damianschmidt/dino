@@ -32,6 +32,7 @@ class Game:
                 random = randint(0, 3)
                 obstacles.append(Cactus(self.screen_width + randint(300, 1000))) if random != 3 \
                     else obstacles.append(Bird(self.screen_width + randint(300, 1000)))
+        # TODO: Fix problem with slowing down obstacles after speed up
         [obstacle.move() for obstacle in obstacles]
         [obstacles.remove(obstacle) for obstacle in obstacles if obstacle.x + obstacle.img.get_width() < 0]
         ground.move()
@@ -158,7 +159,7 @@ class Game:
                 if i == 0:
                     self.draw_screen(dinos, ground, obstacles)
                     self.draw_what_dino_know(distance_to_next_obstacle, height_of_obstacle, width_of_obstacle, speed,
-                                             dino_y, output)
+                                             dino_y)
                     clock.tick(30)
                     pygame.display.update()
 
@@ -226,7 +227,7 @@ class Game:
         visualize.plot_species(stats, view=True)
 
     def draw_what_dino_know(self, distance_to_next_obstacle, height_of_obstacle, width_of_obstacle, speed,
-                            dino_y, the_heightest_output):
+                            dino_y):
         pygame.font.init()
         font = pygame.font.SysFont('Comic-Sans', 20)
         distance_to_next_obstacle_surface = font.render(f'Distance: {floor(distance_to_next_obstacle)}', True,
@@ -235,11 +236,9 @@ class Game:
         width_of_obstacle_surface = font.render(f'Width: {floor(width_of_obstacle)}', True, (255, 0, 0))
         speed_surface = font.render(f'Speed: {floor(speed)}', True, (255, 0, 0))
         dino_y_surface = font.render(f'Dino Y: {floor(dino_y)}', True, (255, 0, 0))
-        output_surface = font.render(f'Output: {the_heightest_output[0]}', True,
-                                     (255, 0, 0))
-        self.screen.blit(distance_to_next_obstacle_surface, (500, 30))
-        self.screen.blit(height_of_obstacle_surface, (500, 50))
-        self.screen.blit(width_of_obstacle_surface, (500, 70))
-        self.screen.blit(speed_surface, (500, 90))
-        self.screen.blit(dino_y_surface, (500, 110))
-        self.screen.blit(output_surface, (500, 130))
+
+        self.screen.blit(distance_to_next_obstacle_surface, (500, 10))
+        self.screen.blit(height_of_obstacle_surface, (500, 30))
+        self.screen.blit(width_of_obstacle_surface, (500, 50))
+        self.screen.blit(speed_surface, (500, 70))
+        self.screen.blit(dino_y_surface, (500, 90))
