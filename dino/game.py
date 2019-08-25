@@ -30,8 +30,8 @@ class Game:
             if obstacle.x < self.screen_width and not obstacle.next_added:
                 obstacle.next_added = True
                 random = randint(0, 3)
-                obstacles.append(Cactus(self.screen_width + randint(300, 1000), self.speed)) if random != 3 \
-                    else obstacles.append(Bird(self.screen_width + randint(300, 1000), self.speed))
+                obstacles.append(Cactus(self.screen_width + randint(400, 1000), self.speed)) if random != 3 \
+                    else obstacles.append(Bird(self.screen_width + randint(400, 1000), self.speed))
         [obstacle.move() for obstacle in obstacles]
         [obstacles.remove(obstacle) for obstacle in obstacles if obstacle.x + obstacle.img.get_width() < 0]
         ground.move()
@@ -182,8 +182,8 @@ class Game:
                 if obstacle.x < self.screen_width and not obstacle.next_added:
                     obstacle.next_added = True
                     random = randint(0, 3)
-                    obstacles.append(Cactus(self.screen_width + randint(300, 1000), self.speed)) if random != 3 \
-                        else obstacles.append(Bird(self.screen_width + randint(300, 1000), self.speed))
+                    obstacles.append(Cactus(self.screen_width + randint(400, 1000), self.speed)) if random != 3 \
+                        else obstacles.append(Bird(self.screen_width + randint(400, 1000), self.speed))
             [obstacle.move() for obstacle in obstacles]
             [obstacles.remove(obstacle) for obstacle in obstacles if obstacle.x + obstacle.img.get_width() < 0]
 
@@ -226,8 +226,8 @@ class Game:
         stats = neat.StatisticsReporter()
         p.add_reporter(stats)
 
-        # Run for 20 generations
-        winner = p.run(self.eval_genomes, 20)
+        # Run for 50 generations
+        winner = p.run(self.eval_genomes, 50)
 
         # Show final stats
         print(f'\nBest genome:\n{winner}')
