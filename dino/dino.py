@@ -35,7 +35,7 @@ class Dino:
 
     def duck(self):
         if self.y_change != 0:
-            self.gravity = 6
+            self.gravity = 8
         self.is_duck = True
         self.is_run = False
 

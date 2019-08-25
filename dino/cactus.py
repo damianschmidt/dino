@@ -3,12 +3,12 @@ from random import randint
 
 
 class Cactus:
-    def __init__(self, x):
+    def __init__(self, x, velocity):
         self.y = 0
         self.x = x
         self.type_of_obstacle = self.get_type_of_obstacle()
         self.img = self.load_img()
-        self.velocity = 8.0
+        self.velocity = velocity
         self.next_added = False
 
         self.passed = False
@@ -33,8 +33,7 @@ class Cactus:
     def collide(self, dino):
         dino_mask = pygame.mask.from_surface(dino.img)
         cactus_mask = pygame.mask.from_surface(self.img)
-        cactus_offset = (int(round(self.x)) - dino.x, int(round(self.y)) - round(dino.y))
-
+        cactus_offset = (int(self.x) - dino.x, int(self.y) - round(dino.y))
         cactus_collision = dino_mask.overlap(cactus_mask, cactus_offset)
 
         if cactus_collision:

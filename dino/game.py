@@ -20,7 +20,7 @@ class Game:
         self.screen_height = 400
         self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
         self.score = 0
-        self.speed = 8.0
+        self.speed = 8
         self.run = False
         self.generation = 0
 
@@ -30,9 +30,8 @@ class Game:
             if obstacle.x < self.screen_width and not obstacle.next_added:
                 obstacle.next_added = True
                 random = randint(0, 3)
-                obstacles.append(Cactus(self.screen_width + randint(300, 1000))) if random != 3 \
-                    else obstacles.append(Bird(self.screen_width + randint(300, 1000)))
-        # TODO: Fix problem with slowing down obstacles after speed up
+                obstacles.append(Cactus(self.screen_width + randint(300, 1000), self.speed)) if random != 3 \
+                    else obstacles.append(Bird(self.screen_width + randint(300, 1000), self.speed))
         [obstacle.move() for obstacle in obstacles]
         [obstacles.remove(obstacle) for obstacle in obstacles if obstacle.x + obstacle.img.get_width() < 0]
         ground.move()
@@ -66,7 +65,7 @@ class Game:
         self.speed = 8.0
         self.score = 0
         self.run = True
-        return [Dino()], Ground(self.screen_width), [Cactus(self.screen_width)]
+        return [Dino()], Ground(self.screen_width), [Cactus(self.screen_width, self.speed)]
 
     def increase_speed(self, ground, obstacles, value):
         self.speed += value
@@ -77,7 +76,7 @@ class Game:
     def game_loop(self):
         dinos = [Dino()]
         ground = Ground(self.screen_width)
-        obstacles = [Cactus(self.screen_width)]
+        obstacles = [Cactus(self.screen_width, self.speed)]
         self.run = True
 
         while True:
@@ -127,10 +126,11 @@ class Game:
             genomes_list.append(genome)
 
         # Build game
-        ground = Ground(self.screen_width)
-        obstacles = [Cactus(self.screen_width)]
+        self.speed = 8
         self.score = 0
-        self.speed = 8.0
+        ground = Ground(self.screen_width)
+        obstacles = [Cactus(self.screen_width, self.speed)]
+        tick = 0
 
         while len(dinos) > 0:
             for event in pygame.event.get():
@@ -174,8 +174,8 @@ class Game:
                 if obstacle.x < self.screen_width and not obstacle.next_added:
                     obstacle.next_added = True
                     random = randint(0, 3)
-                    obstacles.append(Cactus(self.screen_width + randint(300, 1000))) if random != 3 \
-                        else obstacles.append(Bird(self.screen_width + randint(300, 1000)))
+                    obstacles.append(Cactus(self.screen_width + randint(300, 1000), self.speed)) if random != 3 \
+                        else obstacles.append(Bird(self.screen_width + randint(300, 1000), self.speed))
             [obstacle.move() for obstacle in obstacles]
             [obstacles.remove(obstacle) for obstacle in obstacles if obstacle.x + obstacle.img.get_width() < 0]
 
@@ -185,9 +185,6 @@ class Game:
                     if not obstacle.passed and obstacle.x < dino.x:
                         genomes_list[i].fitness += 5
                         obstacle.passed = True
-
-            if int(self.score % 15) == 0:
-                self.increase_speed(ground, obstacles, 0.1)
 
             to_remove = []
             for i, dino in enumerate(dinos):
@@ -200,7 +197,13 @@ class Game:
                 nets.remove(item[1])
                 genomes_list.remove(item[2])
 
-            self.score += 0.2
+            if tick % 5 == 0:
+                tick = 0
+                self.score += 1
+                if self.score % 30 == 0:
+                    self.increase_speed(ground, obstacles, 1)
+
+            tick += 1
 
     def run_neat(self, config_file):
         # Load configuration

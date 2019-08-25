@@ -4,12 +4,12 @@ import pygame
 
 
 class Bird:
-    def __init__(self, x):
+    def __init__(self, x, velocity):
         self.type_of_bird = self.get_type_of_bird()
         self.x = x
         self.y = 0
         self.y_type = self.set_y_type()
-        self.velocity = 8.0
+        self.velocity = velocity
         self.next_added = False
 
         self.imgs = self.load_img()
@@ -47,7 +47,7 @@ class Bird:
     def collide(self, dino):
         dino_mask = pygame.mask.from_surface(dino.img)
         bird_mask = pygame.mask.from_surface(self.img)
-        bird_offset = (int(round(self.x)) - dino.x, int(round(self.y)) - round(dino.y))
+        bird_offset = (int(self.x) - dino.x, int(self.y) - round(dino.y))
         bird_collision = dino_mask.overlap(bird_mask, bird_offset)
 
         if bird_collision:
