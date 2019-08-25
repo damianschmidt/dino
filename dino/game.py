@@ -148,7 +148,10 @@ class Game:
                 dino.move()
 
                 distance_to_next_obstacle = obstacles[obstacle_index].x - (dino.x + dino.img.get_width())
-                height_of_obstacle = obstacles[obstacle_index].img.get_height()
+                if type(obstacles[obstacle_index]) == Cactus:
+                    height_of_obstacle = obstacles[obstacle_index].img.get_height()
+                else:
+                    height_of_obstacle = obstacles[obstacle_index].img.get_height() + obstacles[obstacle_index].y_type
                 width_of_obstacle = obstacles[obstacle_index].img.get_width()
                 speed = self.speed
                 dino_y = dino.y_change
