@@ -2,7 +2,7 @@
 Implementation of Google Chrome Dino game in Python with pygame.
 
 ## Installation
-After clone repo to install required packages type command:
+After cloning repo to install required packages type command:
 ```
 python setup.py install
 ```
